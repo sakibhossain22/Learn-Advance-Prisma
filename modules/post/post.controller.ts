@@ -107,10 +107,11 @@ const deletePost = async (req: any, res: any) => {
                 }
             );
     } catch (error) {
+        const errorMessage = (error instanceof Error) ? error.message : "Failed to Delete post"
         res.status(500)
             .json(
                 {
-                    error: "Failed to Delete post",
+                    error: errorMessage,
                     details: error
                 }
             );

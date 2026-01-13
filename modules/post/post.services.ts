@@ -129,7 +129,6 @@ const createPost = async (data: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'a
     return result;
 }
 const updatePost = async (postId: string, data: Partial<Post>, userId: string, isAdmin: boolean) => {
-    console.log({ postId, userId, data });
     const postResponse = await prisma.post.findUniqueOrThrow({
         where: {
             id: postId,
@@ -156,11 +155,9 @@ const updatePost = async (postId: string, data: Partial<Post>, userId: string, i
     return result
 }
 const deletePost = async (postId: string, userId: string, isAdmin: boolean) => {
-    console.log({ postId, userId });
     const postResponse = await prisma.post.findUniqueOrThrow({
         where: {
-            id: postId,
-            authorid: userId
+            id: postId
         },
         select: {
             id: true,
@@ -170,8 +167,14 @@ const deletePost = async (postId: string, userId: string, isAdmin: boolean) => {
     if (!isAdmin && postResponse.authorid !== userId) {
         throw new Error("Your can't delete this post Cause you're not the Owner of this post")
     }
-    console.log("Author is", userId);
-
+    console.log("Author is", userId)
+    console.log("isAdmin", isAdmin);;
+    const result = await prisma.post.delete({
+        where: {
+            id: postId
+        }
+    })
+    return result
 }
 const getSingleUserPost = async (userid: string) => {
     await prisma.user.findUniqueOrThrow({
