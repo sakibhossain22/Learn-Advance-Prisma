@@ -88,7 +88,39 @@ const deleteCommnetById = async (req: Request, res: Response) => {
 const updateCommnent = async (req: Request, res: Response) => {
 
     try {
-        const result = await commentService.updateCommnent(req.params.commentId as string,req.body, req.user?.id as string);
+        const result = await commentService.updateCommnent(req.params.commentId as string, req.body, req.user?.id as string);
+        res.status(201)
+            .json(
+                {
+                    message: "Comment Updated successfully",
+                    data: result
+                }
+            );
+    } catch (error) {
+        res.status(500)
+            .json(
+                {
+                    error: "Failed to Update the comment",
+                    details: error
+                }
+            );
+    }
+}
+const modarateComment = async (req: Request, res: Response) => {
+    console.log(req.user);
+    if (req.user?.role !== "ADMIN") {
+        res.status(403)
+            .json(
+                {
+                    success: "false",
+                    message: "You're a USER, Only ADMIN can Update Comment Status"
+                }
+            )
+        return
+    }
+    
+    try {
+        const result = await commentService.modarateComment(req.params.commentId as string, req.body);
         res.status(201)
             .json(
                 {
@@ -112,5 +144,6 @@ export const commentController = {
     getCommnetById,
     getCommnetByAuthorId,
     deleteCommnetById,
-    updateCommnent
+    updateCommnent,
+    modarateComment
 }
