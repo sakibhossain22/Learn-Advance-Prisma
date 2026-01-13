@@ -118,7 +118,7 @@ const modarateComment = async (req: Request, res: Response) => {
             )
         return
     }
-    
+
     try {
         const result = await commentService.modarateComment(req.params.commentId as string, req.body);
         res.status(201)
@@ -129,10 +129,11 @@ const modarateComment = async (req: Request, res: Response) => {
                 }
             );
     } catch (error) {
+        const errorMessage = (error instanceof Error) ? error.message : "Failed to Update the comment"
         res.status(500)
             .json(
                 {
-                    error: "Failed to Update the comment",
+                    error: errorMessage,
                     details: error
                 }
             );

@@ -128,9 +128,75 @@ const createPost = async (data: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'a
     });
     return result;
 }
+const updatePost = async (postId: string, data: Partial<Post>, userId: string, isAdmin: boolean) => {
+    console.log({ postId, userId, data });
+    const postResponse = await prisma.post.findUniqueOrThrow({
+        where: {
+            id: postId,
+            authorid: userId
+        },
+        select: {
+            id: true,
+            authorid: true
+        }
+    })
+    if (!isAdmin && postResponse.authorid !== userId) {
+        throw new Error("Your are not the author of this post")
+    }
+    if (!isAdmin) {
+        delete data.isFeatured
+    }
+    const result = await prisma.post.update({
+        where: {
+            id: postId,
+            authorid: userId
+        },
+        data: data
+    })
+    return result
+}
+const deletePost = async (postId: string, userId: string, isAdmin: boolean) => {
+    console.log({ postId, userId });
+    const postResponse = await prisma.post.findUniqueOrThrow({
+        where: {
+            id: postId,
+            authorid: userId
+        },
+        select: {
+            id: true,
+            authorid: true
+        }
+    })
+    if (!isAdmin && postResponse.authorid !== userId) {
+        throw new Error("Your can't delete this post Cause you're not the Owner of this post")
+    }
+    console.log("Author is", userId);
+
+}
+const getSingleUserPost = async (userid: string) => {
+    await prisma.user.findUniqueOrThrow({
+        where: {
+            id: userid,
+            status: "ACTIVE"
+        }
+    })
+    const data = await prisma.post.findMany({
+        where: {
+            authorid: userid
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
+    console.log(data);
+    return data
+}
 
 export const postService = {
     createPost,
     getAllPosts,
-    getPostById
+    getPostById,
+    getSingleUserPost,
+    updatePost,
+    deletePost
 }

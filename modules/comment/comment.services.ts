@@ -75,11 +75,14 @@ const updateCommnent = async (commentId: string, data: any, authorid: string) =>
 const modarateComment = async (commentId: string, data: any) => {
     const { status } = data
 
-    await prisma.comment.findUniqueOrThrow({
+    const comment = await prisma.comment.findUniqueOrThrow({
         where: {
             id: commentId
         }
     })
+    if (comment.status === status) {
+        throw new Error(`Comment Status is Already ${status}`)
+    }
     return await prisma.comment.update({
         where: {
             id: commentId
