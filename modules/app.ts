@@ -5,6 +5,7 @@ import { auth } from '../src/lib/auth';
 import cors from 'cors';
 import { commentRouter } from './comment/comment.routes';
 import globalErrorHandler from '../src/lib/middlewares/globalErrorHandler';
+import { notFound } from '../src/lib/middlewares/notFound';
 
 
 const app = express();
@@ -17,5 +18,6 @@ app.use(cors({
 app.all("/api/auth/*slat", toNodeHandler(auth));
 app.use('/posts', postRouter)
 app.use('/comment', commentRouter)
+app.use(notFound)
 app.use(globalErrorHandler)
 export default app;
