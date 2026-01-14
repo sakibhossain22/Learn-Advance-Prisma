@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { postService } from "./post.services";
 import { PostStatus } from "../../generated/prisma/enums";
 import paginationHelpers from "../../src/helpers/paginationHelpers";
@@ -51,7 +51,7 @@ const getPostById = async (req: Request, res: Response) => {
             );
     }
 }
-const createPost = async (req: any, res: any) => {
+const createPost = async (req: any, res: any, next: NextFunction) => {
     try {
         // Logic to create a post
         const result = await postService.createPost(req.body, req.user.id);
@@ -63,13 +63,7 @@ const createPost = async (req: any, res: any) => {
                 }
             );
     } catch (error) {
-        res.status(500)
-            .json(
-                {
-                    error: "Failed to create post",
-                    details: error
-                }
-            );
+        next(error)
     }
 }
 const updatePost = async (req: any, res: any) => {
@@ -117,6 +111,28 @@ const deletePost = async (req: any, res: any) => {
             );
     }
 }
+const postStats = async (req: any, res: any) => {
+    try {
+        // Logic to create a post
+        const result = await postService.postStats();
+        res.status(201)
+            .json(
+                {
+                    message: "Post Stats Fetched successfully",
+                    data: result
+                }
+            );
+    } catch (error) {
+        const errorMessage = (error instanceof Error) ? error.message : "Failed to Fetched Stats post"
+        res.status(500)
+            .json(
+                {
+                    error: errorMessage,
+                    details: error
+                }
+            );
+    }
+}
 const getSingleUserPost = async (req: any, res: any) => {
     if (!req.user) {
         throw new Error("You're Unauthorized")
@@ -147,5 +163,6 @@ export const postController = {
     getPostById,
     getSingleUserPost,
     updatePost,
-    deletePost
+    deletePost,
+    postStats
 }

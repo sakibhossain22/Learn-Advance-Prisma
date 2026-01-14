@@ -1,5 +1,6 @@
 import { CommentStatus, Post, PostStatus } from "../../generated/prisma/client";
 import { PostWhereInput } from "../../generated/prisma/models";
+import { UserRole } from "../../src/lib/middlewares/auth";
 import { prisma } from "../../src/lib/prisma";
 
 const getAllPosts = async (search: string, tags: string[] | undefined, isFeatured: boolean | undefined, status: PostStatus | undefined, page: number, limit: number, skip: number, sortby: string, sortorder: string) => {
@@ -167,14 +168,33 @@ const deletePost = async (postId: string, userId: string, isAdmin: boolean) => {
     if (!isAdmin && postResponse.authorid !== userId) {
         throw new Error("Your can't delete this post Cause you're not the Owner of this post")
     }
-    console.log("Author is", userId)
-    console.log("isAdmin", isAdmin);;
     const result = await prisma.post.delete({
         where: {
             id: postId
         }
     })
     return result
+}
+const postStats = async () => {
+    return await prisma.$transaction(async (rs) => {
+        const [totalPosts, publishedPosts, draftPosts, archivedPosts, totalComments, approvedComments, totalUsers, adminCount, userCount, totalViews] = await Promise.all([
+            await rs.post.count(),
+            await rs.post.count({ where: { status: "PUBLISHED" } }),
+            await rs.post.count({ where: { status: "DRAFT" } }),
+            await rs.post.count({ where: { status: "ARCHIVE" } }),
+            await rs.comment.count(),
+            await rs.comment.count({ where: { status: "APPROVED" } }),
+            await rs.user.count(),
+            await rs.user.count({ where: { role: UserRole.ADMIN } }),
+            await rs.user.count({ where: { role: UserRole.USER } }),
+            await rs.post.aggregate({ _sum: { views: true } })
+        ])
+        return {
+            totalPosts, publishedPosts, draftPosts, archivedPosts, totalComments, approvedComments, totalUsers, adminCount, userCount, totalViews: totalViews._sum.views
+        }
+    })
+
+
 }
 const getSingleUserPost = async (userid: string) => {
     await prisma.user.findUniqueOrThrow({
@@ -201,5 +221,6 @@ export const postService = {
     getPostById,
     getSingleUserPost,
     updatePost,
-    deletePost
+    deletePost,
+    postStats
 }
